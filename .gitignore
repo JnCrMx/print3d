@@ -1,0 +1,6 @@
+/Debug/*
+!/Debug/src/
+/Debug/src/*
+
+!/Debug/**/makefile
+!/Debug/**/*.mk
