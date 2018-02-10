@@ -500,7 +500,18 @@ int start_daemon(string port, string model)
             return 2;
         }
 
-        printer->setup();
+        if(printer->setup()!=0)
+        {
+        	cout << BOLD << "print3d: " << RED << "fatal-error: " << RESET <<"could not connect to printer" << endl;
+
+            syslog(LOG_INFO, "print3d daemon stopped");
+            unlink("/var/print3d.pid");
+
+            close(usb_handle);
+            closelog();
+
+        	return 2;
+        }
         sleep(1);
 
         handle_signal(SIGUSR1, user_signal);
