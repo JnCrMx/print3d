@@ -1,0 +1,2 @@
+cd Debug/
+make all
