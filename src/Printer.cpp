@@ -42,6 +42,16 @@ int Printer::setup()
 
     tty.c_ispeed = baud;
     tty.c_ospeed = baud;
+
+    tty.c_cflag |=  CREAD | CLOCAL;
+    tty.c_cflag &=  ~CRTSCTS;
+
+    //Hate my life...
+    tty.c_iflag=IGNBRK;
+    tty.c_iflag &= ~(IXON|IXOFF|IXANY);
+    tty.c_lflag=0;
+    tty.c_oflag=0;
+
     if(ioctl(port, TCSETS2, &tty))
     {
         *out << "[" << RED << "fail" << RESET << "]" << endl;
@@ -115,6 +125,7 @@ string Printer::wait_for(const char* towaitfor)
         read(Printer::port, &buf, 1);
         str.append(1, buf);
 
+        //Debug
         //*out << buf;
 
         if(str.find(string(towaitfor))!=string::npos)

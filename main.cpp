@@ -356,7 +356,7 @@ int main(int argc, char* argv[])
         else
         {
             cout << "Setting up port..."; cout.flush();
-            usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+            usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY);
 
             Printer* printer=find_printer(model, usb_handle);
             if(!printer)
@@ -489,7 +489,7 @@ int start_daemon(string port, string model)
 
         //Connect to printer
         cout << "Setting up port..."; cout.flush();
-        usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+        usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY);
 
         Printer* printer=find_printer(model, usb_handle);
         if(!printer)
