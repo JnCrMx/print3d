@@ -89,6 +89,10 @@ int GeeetechPrusaI3X::print(string filename)
             step++;
             if(details) {*out << "[" << GREEN << "ok" << RESET << "]" << endl;}
         }
+        else
+        {
+        	break;
+        }
     }
     printing=false;
     if(details) {*out << "Printing..." << "[" << GREEN << "ok" << RESET << "]" << endl;}
