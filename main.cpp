@@ -2,7 +2,6 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <linux/limits.h>
-
 #include "include/Printer.h"
 #include "include/FreeSculpt.h"
 #include "include/GeeetechPrusaI3X.h"
@@ -522,6 +521,8 @@ int start_daemon(string port, string model)
         {
         	//TODO: Mark
 
+        	cout << action << endl;
+
         	if((action&1)==1)	//Info
         	{
                 cout << "Starting fetching information" << endl;
@@ -573,7 +574,7 @@ int start_daemon(string port, string model)
         		printer->output(&cout, true);
         	}
 
-            usleep(1000);
+            sleep(1);
         }
 
         closelog();
@@ -651,8 +652,10 @@ Printer* find_printer(string model, int USB)
 
 int pass_action(char action, string argmuent, pid_t pid)
 {
-	kill(pid, SIGUSR1); //Interrupt daemon
-
+	using namespace abc; //Why?
+    tcflush(fifo_handle,TCIOFLUSH);
+    using namespace std;
+	
     int len=PATH_MAX + ACTION_MAX;
     char* buffer=new char[len];
 	buffer[0]=action; buffer++;
@@ -660,6 +663,8 @@ int pass_action(char action, string argmuent, pid_t pid)
 	strcpy(buffer, argmuent.c_str()); buffer--;
 
 	write(fifo_handle, buffer, len);
+	
+	kill(pid, SIGUSR1); //Interrupt daemon
 
 	return 0;
 }
