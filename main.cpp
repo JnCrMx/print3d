@@ -5,6 +5,7 @@
 #include "include/Printer.h"
 #include "include/FreeSculpt.h"
 #include "include/GeeetechPrusaI3X.h"
+#include "include/AnycubicI3Mega.h"
 #include "include/Colors.h"
 #include "include/Log.h"
 
@@ -138,6 +139,7 @@ int main(int argc, char* argv[])
                 cout << BOLD << "    models:" << RESET << endl;
                 cout << "    - FreeSculptEXT1" << endl;
                 cout << "    - GeeetechPrusaI3X" << endl;
+                cout << "    - AnycubicI3Mega" << endl;
 
                 return 2;
             }
@@ -149,6 +151,7 @@ int main(int argc, char* argv[])
                 cout << BOLD << "    models:" << RESET << endl;
                 cout << "    - FreeSculptEXT1" << endl;
                 cout << "    - GeeetechPrusaI3X" << endl;
+                cout << "    - AnycubicI3Mega" << endl;
 
                 return 2;
             }
@@ -645,6 +648,10 @@ Printer* find_printer(string model, int USB)
     else if(model=="GeeetechPrusaI3X")
     {
         printer=new GeeetechPrusaI3X(USB, &cout);
+    }
+    else if(model=="AnycubicI3Mega")
+    {
+    	printer=new AnycubicI3Mega(USB, &cout);
     }
 
     return printer;
