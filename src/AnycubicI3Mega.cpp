@@ -11,7 +11,7 @@ int AnycubicI3Mega::stop()
 	if(details) {*out << "Stopping..."; out->flush();}
 	printing=false;
 	send("M2\n"); wait();
-	send("M117\n");
+	send("M117 Stop\n");
     if(details) {*out << "[" << GREEN << "ok" << RESET << "]" << endl;}
     else {*out << "ok" << endl;}
 

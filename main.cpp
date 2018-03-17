@@ -26,6 +26,8 @@ int fifo_handle;
 int action;
 string actionArg;
 
+Printer* printer;
+
 typedef void (*sighandler_t)(int);
 static sighandler_t handle_signal (int sig_nr, sighandler_t signalhandler)
 {
@@ -78,6 +80,11 @@ static void user_signal(int signr)
 				break;
         }
         actionArg = argument;
+
+        if((action&16)==16)
+        {
+        	printer->stop();
+        }
     }
     else if(signr==SIGKILL)
     {
@@ -347,7 +354,7 @@ int main(int argc, char* argv[])
             }
             if((action&16)==16) //Stop
             {
-            	if(pass_action('P', "", pid)!=0)
+            	if(pass_action('S', "", pid)!=0)
             	{
             		cout << BOLD << "print3d: " << RED << "error: " << RESET << "passing action -S failed" << endl;
             	}
@@ -360,7 +367,7 @@ int main(int argc, char* argv[])
             cout << "Setting up port..."; cout.flush();
             usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY);
 
-            Printer* printer=find_printer(model, usb_handle);
+            printer=find_printer(model, usb_handle);
             if(!printer)
             {
                 cout << "[" << RED << "fail" << RESET << "]" << endl;
@@ -493,7 +500,7 @@ int start_daemon(string port, string model)
         cout << "Setting up port..."; cout.flush();
         usb_handle = open (port.c_str(), O_RDWR | O_NOCTTY);
 
-        Printer* printer=find_printer(model, usb_handle);
+        printer=find_printer(model, usb_handle);
         if(!printer)
         {
             cout << "[" << RED << "fail" << RESET << "]" << endl;
