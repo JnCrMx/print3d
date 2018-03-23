@@ -21,7 +21,8 @@ pid_t find_daemon();
 int pass_action(char action, string argument, pid_t pid);
 
 int usb_handle;
-int fifo_handle;
+int mosi_handle;
+int miso_handle;
 
 int action;
 string actionArg;
@@ -49,7 +50,7 @@ static void user_signal(int signr)
         int len=PATH_MAX + ACTION_MAX;
 
         char* buffer=new char[len];
-        read(fifo_handle, buffer, len);
+        read(mosi_handle, buffer, len);
 
         //syslog(LOG_INFO, "Stopped reading from /var/print3d.pipe");
 
@@ -81,10 +82,16 @@ static void user_signal(int signr)
         }
         actionArg = argument;
 
-        if((action&16)==16)
-        {
-        	printer->stop();
-        }
+    	if((action&16)==16)	//Stop
+    	{
+    		cout << "Stopping" << endl;
+
+    		action&=~16;
+
+    		printer->output(new ofstream("/var/print3d.miso"), false);
+    		printer->stop();
+    		printer->output(&cout, true);
+    	}
     }
     else if(signr==SIGKILL)
     {
@@ -312,8 +319,8 @@ int main(int argc, char* argv[])
                 return 2;
             }
 
-            fifo_handle=open("/var/print3d.pipe", O_RDWR | O_NONBLOCK);
-            if(fifo_handle == -1)
+            mosi_handle=open("/var/print3d.mosi", O_RDWR | O_NONBLOCK);
+            if(mosi_handle == -1)
             {
                 cout << "[" << GREEN << "fail" << RESET << "]" << endl;
                 return 2;
@@ -485,15 +492,25 @@ int start_daemon(string port, string model)
         pidfile.flush();
         pidfile.close();
 
-        if(access("/var/print3d.pipe", F_OK) == -1)
+        if(access("/var/print3d.mosi", F_OK) == -1)
         {
-            mkfifo("/var/print3d.pipe", ACCESSPERMS);
+        	mkfifo("/var/print3d.mosi", ACCESSPERMS);
+        }
+        if(access("/var/print3d.miso", F_OK) == -1)
+        {
+        	mkfifo("/var/print3d.miso", ACCESSPERMS);
         }
 
-        fifo_handle=open("/var/print3d.pipe", O_RDWR | O_NONBLOCK);
-        if(fifo_handle == -1)
+        miso_handle=open("/var/print3d.miso", O_RDWR | O_NONBLOCK);
+        if(miso_handle == -1)
         {
-            return 2;
+        	return 2;
+        }
+
+        mosi_handle=open("/var/print3d.mosi", O_RDWR | O_NONBLOCK);
+        if(mosi_handle == -1)
+        {
+        	return 2;
         }
 
         //Connect to printer
@@ -539,7 +556,7 @@ int start_daemon(string port, string model)
 
         		action&=~1;
 
-        		printer->output(new ofstream("/var/print3d.pipe"), false);
+        		printer->output(new ofstream("/var/print3d.miso"), false);
         		printer->information();
         		printer->output(&cout, true);
         	}
@@ -549,7 +566,7 @@ int start_daemon(string port, string model)
 
         		action&=~2;
 
-        		printer->output(new ofstream("/var/print3d.pipe"), false);
+        		printer->output(new ofstream("/var/print3d.miso"), false);
         		printer->test();
         		printer->output(&cout, true);
         	}
@@ -559,7 +576,7 @@ int start_daemon(string port, string model)
 
         		action&=~4;
 
-        		printer->output(new ofstream("/var/print3d.pipe"), false);
+        		printer->output(new ofstream("/var/print3d.miso"), false);
         		printer->custom_gcode(actionArg);
         		printer->output(&cout, true);
         	}
@@ -569,7 +586,7 @@ int start_daemon(string port, string model)
 
         		action&=~8;
 
-        		printer->output(new ofstream("/var/print3d.pipe"), false);
+        		printer->output(new ofstream("/var/print3d.miso"), false);
         		printer->print(actionArg);
         		printer->output(&cout, true);
         	}
@@ -579,9 +596,10 @@ int start_daemon(string port, string model)
 
         		action&=~16;
 
-        		printer->output(new ofstream("/var/print3d.pipe"), false);
+        		printer->output(new ofstream("/var/print3d.miso"), false);
         		printer->stop();
         		printer->output(&cout, true);
+
         	}
 
             sleep(1);
@@ -666,18 +684,15 @@ Printer* find_printer(string model, int USB)
 
 int pass_action(char action, string argmuent, pid_t pid)
 {
-	using namespace abc; //Why?
-    tcflush(fifo_handle,TCIOFLUSH);
-    using namespace std;
-	
     int len=PATH_MAX + ACTION_MAX;
     char* buffer=new char[len];
 	buffer[0]=action; buffer++;
 
 	strcpy(buffer, argmuent.c_str()); buffer--;
 
-	write(fifo_handle, buffer, len);
-	
+	write(mosi_handle, buffer, len);
+
+	sleep(1);
 	kill(pid, SIGUSR1); //Interrupt daemon
 
 	return 0;
